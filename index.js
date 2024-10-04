@@ -33,6 +33,10 @@ app.post("/api/count", async (req, res) => {
   });
 });
 
+app.get("/api/health", async (req, res) => {
+  res.send("I'm ok");
+});
+
 // 获取计数
 app.get("/api/count", async (req, res) => {
   const result = await Counter.count();
