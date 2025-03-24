@@ -11,8 +11,12 @@ const {
   calculateTotalScore,
   beginTransaction,
   commitTransaction,
-  rollbackTransaction
+  rollbackTransaction,
+  saveWechatSession
 } = require("./db");
+
+const axios = require('axios');
+const { v4: uuidv4 } = require('uuid');
 
 const logger = morgan("tiny");
 
@@ -21,6 +25,11 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cors());
 app.use(logger);
+
+// 微信配置参数（需要替换为实际值）
+const WX_APPID = '你的小程序appid';
+const WX_SECRET = '你的小程序secret';
+const WX_LOGIN_URL = 'https://api.weixin.qq.com/sns/jscode2session';
 
 // 首页
 app.get("/", async (req, res) => {
@@ -165,6 +174,60 @@ app.post('/api/submit-answer', async (req, res) => {
       message: error.message || '提交答案失败' 
     });
   }
+});
+
+// 添加登录路由
+app.post('/api/login', async (req, res) => {
+    try {
+        const { code } = req.body;
+        
+        // 请求微信服务器获取session信息
+        const response = await axios.get(WX_LOGIN_URL, {
+            params: {
+                appid: WX_APPID,
+                secret: WX_SECRET,
+                js_code: code,
+                grant_type: 'authorization_code'
+            }
+        });
+
+        const { openid, session_key, errcode, errmsg } = response.data;
+        
+        // 处理微信返回错误
+        if (errcode) {
+            return res.status(401).json({
+                code: errcode,
+                message: errmsg
+            });
+        }
+
+        // 生成第三方session
+        const thirdSession = uuidv4();
+        const expiresIn = 7200; // 2小时有效期
+        
+        // 存储会话信息到数据库
+        await saveWechatSession({
+            thirdSession,
+            openid,
+            sessionKey: session_key,
+            expiresAt: new Date(Date.now() + expiresIn * 1000)
+        });
+
+        res.json({
+            code: 0,
+            data: {
+                session: thirdSession,
+                expiresIn
+            }
+        });
+
+    } catch (error) {
+        console.error('登录失败:', error);
+        res.status(500).json({
+            code: 500,
+            message: '服务器内部错误'
+        });
+    }
 });
 
 const port = process.env.PORT || 80;

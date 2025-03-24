@@ -251,6 +251,41 @@ const getQuestionById = (id, transaction) =>
       required: true
     }]
   });
+// 新增微信会话模型
+const WechatSession = testDB.define("WechatSession", {
+  thirdSession: {
+    type: DataTypes.STRING(255),
+    unique: true,
+    allowNull: false,
+    field: 'thirdSession'
+  },
+  openid: {
+    type: DataTypes.STRING(255),
+    allowNull: false
+  },
+  sessionKey: {
+    type: DataTypes.STRING(255),
+    allowNull: false
+  },
+  expiresAt: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    field: 'expiresAt'
+  }
+}, {
+  tableName: 'WechatSessions',
+  timestamps: true,
+  charset: 'utf8',
+  engine: 'InnoDB'
+});
+
+// 保存会话方法（使用Sequelize实现）
+async function saveWechatSession(sessionData) {
+  await WechatSession.upsert(sessionData, {
+    conflictFields: ['openid'], // 当openid冲突时更新记录
+    returning: true
+  });
+}
 
 // 数据库初始化方法
 async function init() {
@@ -265,6 +300,7 @@ async function init() {
   });
   await Question.sync({ alter: true });
   await Option.sync({ alter: true });
+  await WechatSession.sync({ alter: true }); // 同步微信会话表
 }
 
 // 新增数据访问方法
@@ -279,6 +315,15 @@ const getQuestionnaireWithQuestions = async (questionnaireId) => {
     replacements: { questionnaireId },
     type: questionnaireDB.QueryTypes.SELECT
   });
+}
+  
+
+// 导出初始化方法和模型
+module.exports = {
+  init,
+  Counter,
+  WechatSession,
+  saveWechatSession
 };
 
 const getQuestionnaireBaseInfo = async (questionnaireId) => {
@@ -304,7 +349,8 @@ module.exports = {
   getOptionById,
   getQuestionById,
   Question,
-  Option
+  Option,
+  saveWechatSession
 };
 
 console.log('Question associations:', Question.associations);
