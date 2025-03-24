@@ -27,8 +27,8 @@ app.use(cors());
 app.use(logger);
 
 // 微信配置参数（需要替换为实际值）
-const WX_APPID = '你的小程序appid';
-const WX_SECRET = '你的小程序secret';
+const WX_APPID = process.env.WX_APPID;
+const WX_SECRET = process.env.WX_SECRET;
 const WX_LOGIN_URL = 'https://api.weixin.qq.com/sns/jscode2session';
 
 // 首页
@@ -233,6 +233,11 @@ app.post('/api/login', async (req, res) => {
 const port = process.env.PORT || 80;
 
 async function bootstrap() {
+  // 新增配置校验
+  if (!WX_APPID || !WX_SECRET) {
+    throw new Error('微信配置参数缺失，请检查环境变量');
+  }
+  
   await initDB();
   app.listen(port, () => {
     console.log("启动成功", port);
