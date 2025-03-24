@@ -12,7 +12,8 @@ const {
   beginTransaction,
   commitTransaction,
   rollbackTransaction,
-  saveWechatSession
+  saveWechatSession,
+  getWechatSession
 } = require("./db");
 
 const axios = require('axios');
@@ -30,6 +31,40 @@ app.use(logger);
 const WX_APPID = process.env.WX_APPID;
 const WX_SECRET = process.env.WX_SECRET;
 const WX_LOGIN_URL = 'https://api.weixin.qq.com/sns/jscode2session';
+
+// 新增认证中间件
+const authMiddleware = async (req, res, next) => {
+    try {
+        const session = req.headers.authorization?.split(' ')[1] || req.body.session;
+        if (!session) {
+            return res.status(401).json({ code: 401, message: '未提供会话凭证' });
+        }
+        
+        // 查询数据库验证session有效性
+        const sessionData = await getWechatSession(session); // 需要从db.js导出getWechatSession方法
+        if (!sessionData || new Date() > sessionData.expiresAt) {
+            return res.status(401).json({ code: 401, message: '会话已过期或无效' });
+        }
+        
+        // 将会话信息挂载到请求对象
+        req.user = { 
+            openid: sessionData.openid,
+            sessionKey: sessionData.sessionKey 
+        };
+        next();
+    } catch (error) {
+        console.error('认证失败:', error);
+        res.status(500).json({ code: 500, message: '服务器内部错误' });
+    }
+};
+
+// 在需要认证的路由前添加中间件（排除登录接口）
+app.use((req, res, next) => {
+    if (req.path === '/api/login' || req.path === '/api/health') {
+        return next();
+    }
+    authMiddleware(req, res, next);
+});
 
 // 首页
 app.get("/", async (req, res) => {
@@ -58,6 +93,7 @@ app.get("/api/health", async (req, res) => {
 
 // 获取计数
 app.get("/api/count", async (req, res) => {
+  // 现在可以通过req.user获取用户信息
   const result = await Counter.count();
   res.send({
     code: 0,

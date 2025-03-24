@@ -287,6 +287,15 @@ async function saveWechatSession(sessionData) {
   });
 }
 
+// 添加获取会话的方法
+async function getWechatSession(thirdSession) {
+    return await WechatSession.findOne({
+        where: {
+            thirdSession: thirdSession
+        }
+    });
+}
+
 // 数据库初始化方法
 async function init() {
   await Counter.sync({ alter: true });
@@ -317,15 +326,6 @@ const getQuestionnaireWithQuestions = async (questionnaireId) => {
   });
 }
   
-
-// 导出初始化方法和模型
-module.exports = {
-  init,
-  Counter,
-  WechatSession,
-  saveWechatSession
-};
-
 const getQuestionnaireBaseInfo = async (questionnaireId) => {
   return await Questionnaire.findOne({
     where: { id: questionnaireId },
@@ -350,7 +350,8 @@ module.exports = {
   getQuestionById,
   Question,
   Option,
-  saveWechatSession
+  saveWechatSession,
+  getWechatSession
 };
 
 console.log('Question associations:', Question.associations);
