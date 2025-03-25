@@ -67,6 +67,8 @@ app.get('/api/questionnaire/:id', async (req, res) => {
     // 获取题目和选项
     const [questions] = await getQuestionnaireWithQuestions(questionnaireId);
 
+    console.log(questions);
+
     // 格式化结构
     const formatted = questions.reduce((acc, row) => {
       let question = acc.find(q => q.id === row.id);
@@ -92,7 +94,7 @@ app.get('/api/questionnaire/:id', async (req, res) => {
     res.json({
       code: 0,
       data: {
-        ...questionnaire.toJSON(),
+        id: questionnaireId,
         questions: formatted
       }
     });
