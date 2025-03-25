@@ -103,6 +103,75 @@ const UserAnswer = questionnaireDB.define('user_answer', {
   timestamps: false
 });
 
+// 新增Question模型定义
+const Question = questionnaireDB.define('question', {
+  questionnaire_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  question_text: {
+    type: DataTypes.TEXT,
+    allowNull: false
+  },
+  question_type: {
+    type: DataTypes.ENUM('single', 'multiple'),
+    defaultValue: 'single'
+  },
+  sort_order: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
+  },
+  weight: {
+    type: DataTypes.DECIMAL(5,2),
+    defaultValue: 1.00
+  }
+}, {
+  tableName: 'question',
+  timestamps: false
+});
+
+// 新增Option模型定义
+const Option = questionnaireDB.define('option', {
+  question_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  option_text: {
+    type: DataTypes.STRING(255),
+    allowNull: false
+  },
+  is_correct: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  score: {
+    type: DataTypes.DECIMAL(5,2),
+    allowNull: false
+  },
+  sort_order: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
+  }
+}, {
+  tableName: 'option',
+  timestamps: false
+});
+
+// 建立模型关联
+Questionnaire.hasMany(Question, {
+  foreignKey: 'questionnaire_id',
+  onDelete: 'CASCADE' // 级联删除
+});
+
+Question.hasMany(Option, {
+  foreignKey: 'question_id',
+  onDelete: 'CASCADE' // 级联删除
+});
+
+Option.belongsTo(Question, {
+  foreignKey: 'question_id'
+});
+
 // 新增数据库操作方法
 const createUserAnswer = async ({ 
   user_id, 
@@ -152,10 +221,16 @@ const rollbackTransaction = (t) => t.rollback();
 
 // 辅助查询方法
 const getOptionById = (id, transaction) => 
-  questionnaireDB.models.option.findByPk(id, { transaction });
+  Option.findByPk(id, { transaction });
 
-const getQuestionById = (id, transaction) => 
-  questionnaireDB.models.question.findByPk(id, { transaction });
+const getQuestionById = (id, transaction) =>
+  Question.findByPk(id, { 
+    transaction,
+    include: [{
+      model: Questionnaire,
+      required: true
+    }]
+  });
 
 // 数据库初始化方法
 async function init() {
@@ -168,6 +243,8 @@ async function init() {
     alter: true,
     logging: console.log // 显示生成的SQL
   });
+  await Question.sync({ alter: true });
+  await Option.sync({ alter: true });
 }
 
 // 新增数据访问方法
@@ -205,5 +282,7 @@ module.exports = {
   commitTransaction: (t) => t.commit(),
   rollbackTransaction: (t) => t.rollback(),
   getOptionById,
-  getQuestionById
+  getQuestionById,
+  Question,
+  Option
 };
