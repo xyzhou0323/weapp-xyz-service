@@ -164,6 +164,10 @@ async function init() {
     alter: true,
     logging: console.log // 显示生成的SQL
   });
+  await UserAnswer.sync({
+    alter: true,
+    logging: console.log // 显示生成的SQL
+  });
 }
 
 // 新增数据访问方法
@@ -189,7 +193,7 @@ const getQuestionnaireBaseInfo = async (questionnaireId) => {
 
 // 修改导出
 module.exports = {
-  init: init,
+  initDB: init,
   Counter,
   Questionnaire,
   UserAnswer,
