@@ -20,9 +20,27 @@ const Counter = sequelize.define("Counter", {
   },
 });
 
+// 添加问卷模型定义
+const Questionnaire = sequelize.define('Questionnaire', {
+  title: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  description: DataTypes.TEXT,
+  version: {
+    type: DataTypes.STRING,
+    defaultValue: '1.0.0'
+  },
+  is_published: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  }
+});
+
 // 数据库初始化方法
 async function init() {
   await Counter.sync({ alter: true });
+  await Questionnaire.sync({ alter: true });
 }
 
 // 新增数据访问方法
@@ -40,7 +58,7 @@ const getQuestionnaireWithQuestions = async (questionnaireId) => {
 };
 
 const getQuestionnaireBaseInfo = async (questionnaireId) => {
-  return await sequelize.findOne({
+  return await Questionnaire.findOne({
     where: { id: questionnaireId },
     attributes: ['id', 'title', 'description', 'version']
   });
@@ -50,6 +68,7 @@ const getQuestionnaireBaseInfo = async (questionnaireId) => {
 module.exports = {
   init,
   Counter,
+  Questionnaire,
   getQuestionnaireWithQuestions,
   getQuestionnaireBaseInfo
 };
