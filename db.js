@@ -90,7 +90,7 @@ const getQuestionnaireWithQuestions = async (questionnaireId) => {
   return await questionnaireDB.query(`
     SELECT q.*, o.id AS option_id, o.option_text, o.score 
     FROM question q
-    JOIN option o ON q.id = o.question_id
+    JOIN \`option\` o ON q.id = o.question_id
     WHERE q.questionnaire_id = :questionnaireId
     ORDER BY q.sort_order, o.sort_order
   `, {
