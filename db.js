@@ -25,8 +25,31 @@ async function init() {
   await Counter.sync({ alter: true });
 }
 
-// 导出初始化方法和模型
+// 新增数据访问方法
+const getQuestionnaireWithQuestions = async (questionnaireId) => {
+  return await sequelize.query(`
+    SELECT q.*, o.id AS option_id, o.option_text, o.score 
+    FROM question q
+    JOIN option o ON q.id = o.question_id
+    WHERE q.questionnaire_id = :questionnaireId
+    ORDER BY q.sort_order, o.sort_order
+  `, {
+    replacements: { questionnaireId },
+    type: sequelize.QueryTypes.SELECT
+  });
+};
+
+const getQuestionnaireBaseInfo = async (questionnaireId) => {
+  return await sequelize.findOne({
+    where: { id: questionnaireId },
+    attributes: ['id', 'title', 'description', 'version']
+  });
+};
+
+// 修改导出
 module.exports = {
   init,
   Counter,
+  getQuestionnaireWithQuestions,
+  getQuestionnaireBaseInfo
 };

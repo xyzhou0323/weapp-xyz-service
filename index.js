@@ -2,7 +2,7 @@ const path = require("path");
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
-const { init: initDB, Counter } = require("./db");
+const { init: initDB, Counter, getQuestionnaireWithQuestions, getQuestionnaireBaseInfo } = require("./db");
 
 const logger = morgan("tiny");
 
@@ -50,6 +50,56 @@ app.get("/api/count", async (req, res) => {
 app.get("/api/wx_openid", async (req, res) => {
   if (req.headers["x-wx-source"]) {
     res.send(req.headers["x-wx-openid"]);
+  }
+});
+
+// 新增获取问卷接口
+app.get('/api/questionnaire/:id', async (req, res) => {
+  try {
+    const questionnaireId = req.params.id;
+    
+    // 获取基础信息
+    const questionnaire = await getQuestionnaireBaseInfo(questionnaireId);
+    if (!questionnaire) {
+      return res.status(404).json({ code: 404, message: '问卷不存在' });
+    }
+
+    // 获取题目和选项
+    const [questions] = await getQuestionnaireWithQuestions(questionnaireId);
+
+    // 格式化结构
+    const formatted = questions.reduce((acc, row) => {
+      let question = acc.find(q => q.id === row.id);
+      if (!question) {
+        question = {
+          id: row.id,
+          question_text: row.question_text,
+          question_type: row.question_type,
+          sort_order: row.sort_order,
+          weight: row.weight,
+          options: []
+        };
+        acc.push(question);
+      }
+      question.options.push({
+        id: row.option_id,
+        option_text: row.option_text,
+        score: row.score
+      });
+      return acc;
+    }, []);
+
+    res.json({
+      code: 0,
+      data: {
+        ...questionnaire.toJSON(),
+        questions: formatted
+      }
+    });
+
+  } catch (error) {
+    console.error('获取问卷失败:', error);
+    res.status(500).json({ code: 500, message: '服务器内部错误' });
   }
 });
 
