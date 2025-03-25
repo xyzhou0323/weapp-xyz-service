@@ -2,7 +2,17 @@ const path = require("path");
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
-const { init: initDB, Counter, getQuestionnaireWithQuestions, getQuestionnaireBaseInfo } = require("./db");
+const { 
+  initDB,
+  Counter,
+  getQuestionnaireWithQuestions,
+  getQuestionnaireBaseInfo,
+  createUserAnswer,
+  calculateTotalScore,
+  beginTransaction,
+  commitTransaction,
+  rollbackTransaction
+} = require("./db");
 
 const logger = morgan("tiny");
 
@@ -107,7 +117,7 @@ app.get('/api/questionnaire/:id', async (req, res) => {
 
 // 新增提交答案接口
 app.post('/api/submit-answer', async (req, res) => {
-  const transaction = await db.beginTransaction();
+  const transaction = await beginTransaction();
   try {
     const { user_id, questionnaire_id, answers } = req.body;
     
@@ -119,7 +129,7 @@ app.post('/api/submit-answer', async (req, res) => {
     // 存储答案
     const insertedAnswers = [];
     for (const answer of answers) {
-      const result = await db.createUserAnswer({
+      const result = await createUserAnswer({
         user_id,
         questionnaire_id,
         question_id: answer.question_id,
@@ -130,13 +140,13 @@ app.post('/api/submit-answer', async (req, res) => {
     }
 
     // 计算总分
-    const totalScore = await db.calculateTotalScore(
+    const totalScore = await calculateTotalScore(
       user_id, 
       questionnaire_id,
       transaction
     );
 
-    await db.commitTransaction(transaction);
+    await commitTransaction(transaction);
     
     res.json({
       code: 0,
@@ -147,7 +157,7 @@ app.post('/api/submit-answer', async (req, res) => {
     });
 
   } catch (error) {
-    await db.rollbackTransaction(transaction);
+    await rollbackTransaction(transaction);
     console.error('提交失败:', error);
     res.status(500).json({ 
       code: 500, 

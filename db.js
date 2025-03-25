@@ -189,16 +189,17 @@ const getQuestionnaireBaseInfo = async (questionnaireId) => {
 
 // 修改导出
 module.exports = {
-  init,
+  init: init,
   Counter,
   Questionnaire,
+  UserAnswer,
   getQuestionnaireWithQuestions,
   getQuestionnaireBaseInfo,
   createUserAnswer,
   calculateTotalScore,
-  beginTransaction,
-  commitTransaction,
-  rollbackTransaction,
+  beginTransaction: () => questionnaireDB.transaction(),
+  commitTransaction: (t) => t.commit(),
+  rollbackTransaction: (t) => t.rollback(),
   getOptionById,
   getQuestionById
 };
