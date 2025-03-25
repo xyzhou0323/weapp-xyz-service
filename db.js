@@ -233,6 +233,7 @@ const getQuestionById = (id, transaction) =>
     transaction,
     include: [{
       model: Questionnaire,
+      as: 'questionnaire',
       required: true
     }]
   });
