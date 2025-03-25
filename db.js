@@ -52,20 +52,22 @@ const Questionnaire = questionnaireDB.define('questionnaire', {
   is_published: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
+  },
+  created_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+  },
+  updated_at: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
   }
 }, {
   tableName: 'questionnaire',
   timestamps: true,
-  createdAt: {
-    type: DataTypes.DATE,
-    field: 'created_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-  },
-  updatedAt: {
-    type: DataTypes.DATE,
-    field: 'updated_at',
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
-  },
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
   engine: 'InnoDB',
   charset: 'utf8mb4',
   collate: 'utf8mb4_unicode_ci'
