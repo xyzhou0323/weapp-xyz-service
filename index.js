@@ -85,6 +85,7 @@ app.get('/api/questionnaire/:id', async (req, res) => {
       if (!question) {
         question = {
           id: row.id,
+          sub_type: row.sub_type,
           question_text: row.question_text,
           question_type: row.question_type,
           sort_order: row.sort_order,
