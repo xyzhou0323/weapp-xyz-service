@@ -124,6 +124,12 @@ const Question = questionnaireDB.define('question', {
   weight: {
     type: DataTypes.DECIMAL(5,2),
     defaultValue: 1.00
+  },
+  sub_type: {
+    type: DataTypes.STRING(20), // 对应VARCHAR(20)
+    comment: '分量表分类',
+    defaultValue: null,        // 显式设置默认值
+    allowNull: true            // 允许NULL
   }
 }, {
   tableName: 'question',
