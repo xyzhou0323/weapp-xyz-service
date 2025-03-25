@@ -186,7 +186,7 @@ const createUserAnswer = async ({
   transaction 
 }) => {
   // 获取选项分数和题目权重
-  const [[option, question]] = await Promise.all([
+  const [option, question] = await Promise.all([
     getOptionById(option_id, transaction),
     getQuestionById(question_id, transaction)
   ]);
