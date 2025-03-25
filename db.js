@@ -211,18 +211,26 @@ const createUserAnswer = async ({
 };
 
 const calculateTotalScore = async (user_id, questionnaire_id, transaction) => {
-  const [result] = await questionnaireDB.query(`
-    SELECT SUM(ua.obtained_score) AS total
+  const results = await questionnaireDB.query(`
+    SELECT 
+      IFNULL(q.sub_type, '未分类') AS sub_type,
+      SUM(ua.obtained_score) AS total_score
     FROM user_answer ua
+    JOIN question q ON ua.question_id = q.id
     WHERE ua.user_id = :user_id
       AND ua.questionnaire_id = :questionnaire_id
+    GROUP BY q.sub_type
   `, {
     replacements: { user_id, questionnaire_id },
     type: questionnaireDB.QueryTypes.SELECT,
     transaction
   });
 
-  return result.total || 0;
+  // 转换为对象格式 { 分量表类型: 得分 }
+  return results.reduce((acc, { sub_type, total_score }) => {
+    acc[sub_type] = Number(total_score);
+    return acc;
+  }, {});
 };
 
 // 事务管理方法
