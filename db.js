@@ -76,6 +76,87 @@ const Questionnaire = questionnaireDB.define('questionnaire', {
 // 验证表名映射
 console.log(Questionnaire.getTableName()); // 应该输出'questionnaire'
 
+// 新增用户答案模型
+const UserAnswer = questionnaireDB.define('user_answer', {
+  user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  questionnaire_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  question_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  option_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  obtained_score: {
+    type: DataTypes.DECIMAL(5,2),
+    allowNull: false
+  }
+}, {
+  tableName: 'user_answer',
+  timestamps: false
+});
+
+// 新增数据库操作方法
+const createUserAnswer = async ({ 
+  user_id, 
+  questionnaire_id, 
+  question_id, 
+  option_id, 
+  transaction 
+}) => {
+  // 获取选项分数和题目权重
+  const [[option, question]] = await Promise.all([
+    getOptionById(option_id, transaction),
+    getQuestionById(question_id, transaction)
+  ]);
+
+  if (!option || !question) {
+    throw new Error('无效的问题或选项');
+  }
+
+  return UserAnswer.create({
+    user_id,
+    questionnaire_id,
+    question_id,
+    option_id,
+    obtained_score: option.score * question.weight
+  }, { transaction });
+};
+
+const calculateTotalScore = async (user_id, questionnaire_id, transaction) => {
+  const [result] = await questionnaireDB.query(`
+    SELECT SUM(ua.obtained_score) AS total
+    FROM user_answer ua
+    WHERE ua.user_id = :user_id
+      AND ua.questionnaire_id = :questionnaire_id
+  `, {
+    replacements: { user_id, questionnaire_id },
+    type: questionnaireDB.QueryTypes.SELECT,
+    transaction
+  });
+
+  return result.total || 0;
+};
+
+// 事务管理方法
+const beginTransaction = () => questionnaireDB.transaction();
+const commitTransaction = (t) => t.commit();
+const rollbackTransaction = (t) => t.rollback();
+
+// 辅助查询方法
+const getOptionById = (id, transaction) => 
+  questionnaireDB.models.option.findByPk(id, { transaction });
+
+const getQuestionById = (id, transaction) => 
+  questionnaireDB.models.question.findByPk(id, { transaction });
+
 // 数据库初始化方法
 async function init() {
   await Counter.sync({ alter: true });
@@ -112,5 +193,12 @@ module.exports = {
   Counter,
   Questionnaire,
   getQuestionnaireWithQuestions,
-  getQuestionnaireBaseInfo
+  getQuestionnaireBaseInfo,
+  createUserAnswer,
+  calculateTotalScore,
+  beginTransaction,
+  commitTransaction,
+  rollbackTransaction,
+  getOptionById,
+  getQuestionById
 };

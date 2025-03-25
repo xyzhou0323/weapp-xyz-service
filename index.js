@@ -105,6 +105,57 @@ app.get('/api/questionnaire/:id', async (req, res) => {
   }
 });
 
+// 新增提交答案接口
+app.post('/api/submit-answer', async (req, res) => {
+  const transaction = await db.beginTransaction();
+  try {
+    const { user_id, questionnaire_id, answers } = req.body;
+    
+    // 验证输入
+    if (!Array.isArray(answers) || answers.length === 0) {
+      return res.status(400).json({ code: 400, message: '无效的答案数据' });
+    }
+
+    // 存储答案
+    const insertedAnswers = [];
+    for (const answer of answers) {
+      const result = await db.createUserAnswer({
+        user_id,
+        questionnaire_id,
+        question_id: answer.question_id,
+        option_id: answer.option_id,
+        transaction
+      });
+      insertedAnswers.push(result);
+    }
+
+    // 计算总分
+    const totalScore = await db.calculateTotalScore(
+      user_id, 
+      questionnaire_id,
+      transaction
+    );
+
+    await db.commitTransaction(transaction);
+    
+    res.json({
+      code: 0,
+      data: {
+        total_score: totalScore,
+        answer_count: insertedAnswers.length
+      }
+    });
+
+  } catch (error) {
+    await db.rollbackTransaction(transaction);
+    console.error('提交失败:', error);
+    res.status(500).json({ 
+      code: 500, 
+      message: error.message || '提交答案失败' 
+    });
+  }
+});
+
 const port = process.env.PORT || 80;
 
 async function bootstrap() {
