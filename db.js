@@ -21,7 +21,7 @@ const Counter = sequelize.define("Counter", {
 });
 
 // 添加问卷模型定义
-const Questionnaire = sequelize.define('Questionnaire', {
+const Questionnaire = sequelize.define('questionnaire', {
   title: {
     type: DataTypes.STRING,
     allowNull: false
