@@ -160,7 +160,12 @@ const Option = questionnaireDB.define('option', {
 // 建立模型关联
 Questionnaire.hasMany(Question, {
   foreignKey: 'questionnaire_id',
-  onDelete: 'CASCADE' // 级联删除
+  as: 'questions'
+});
+
+Question.belongsTo(Questionnaire, {
+  foreignKey: 'questionnaire_id',
+  as: 'questionnaire'
 });
 
 Question.hasMany(Option, {
@@ -286,3 +291,9 @@ module.exports = {
   Question,
   Option
 };
+
+console.log('Question associations:', Question.associations);
+// 应显示与Questionnaire的关联
+
+console.log('Questionnaire associations:', Questionnaire.associations);
+// 应显示与Question的关联
