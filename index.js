@@ -65,7 +65,7 @@ app.get('/api/questionnaire/:id', async (req, res) => {
     }
 
     // 获取题目和选项
-    const [questions] = await getQuestionnaireWithQuestions(questionnaireId);
+    const questions = await getQuestionnaireWithQuestions(questionnaireId);
 
     console.log(questions);
 
