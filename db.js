@@ -22,6 +22,10 @@ const questionnaireDB = new Sequelize("nxyz", MYSQL_USERNAME, MYSQL_PASSWORD, {
   dialect: "mysql",
   define: {
     freezeTableName: true // 禁用复数化
+  },
+  dialectOptions: {
+    charset: 'utf8mb4',       // 显式设置字符集
+    collate: 'utf8mb4_unicode_ci'
   }
 });
 
@@ -37,12 +41,12 @@ const Counter = testDB.define("Counter", {
 // 添加问卷模型定义
 const Questionnaire = questionnaireDB.define('questionnaire', {
   title: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(100),
     allowNull: false
   },
   description: DataTypes.TEXT,
   version: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(20),
     defaultValue: '1.0.0'
   },
   is_published: {
@@ -50,7 +54,21 @@ const Questionnaire = questionnaireDB.define('questionnaire', {
     defaultValue: false
   }
 }, {
-  tableName: 'questionnaire' // 显式指定表名
+  tableName: 'questionnaire',
+  timestamps: true,
+  createdAt: {
+    type: DataTypes.DATE,
+    field: 'created_at',
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+  },
+  updatedAt: {
+    type: DataTypes.DATE,
+    field: 'updated_at',
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
+  },
+  engine: 'InnoDB',
+  charset: 'utf8mb4',
+  collate: 'utf8mb4_unicode_ci'
 });
 
 // 验证表名映射
@@ -59,7 +77,10 @@ console.log(Questionnaire.getTableName()); // 应该输出'questionnaire'
 // 数据库初始化方法
 async function init() {
   await Counter.sync({ alter: true });
-  await Questionnaire.sync({ alter: true });
+  await Questionnaire.sync({ 
+    alter: true,
+    logging: console.log // 显示生成的SQL
+  });
 }
 
 // 新增数据访问方法
