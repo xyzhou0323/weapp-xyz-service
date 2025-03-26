@@ -279,7 +279,7 @@ app.post('/api/login', async (req, res) => {
         console.error('登录失败:', error);
         res.status(500).json({
             code: 500,
-            message: '服务器内部错误'
+            message: error
         });
     }
 });
