@@ -58,12 +58,13 @@ const authMiddleware = async (req, res, next) => {
     }
 };
 
-// 在需要认证的路由前添加中间件（排除登录接口）
+// 在需要认证的路由前添加中间件
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health') {
-        return next();
+    // 仅对需要认证的路由应用中间件
+    if (req.path === '/api/submit-answer') {
+        return authMiddleware(req, res, next);
     }
-    authMiddleware(req, res, next);
+    next();
 });
 
 // 首页
@@ -161,11 +162,13 @@ app.get('/api/questionnaire/:id', async (req, res) => {
   }
 });
 
-// 新增提交答案接口
+// 修改提交答案接口
 app.post('/api/submit-answer', async (req, res) => {
   const transaction = await beginTransaction();
   try {
-    const { user_id, questionnaire_id, answers } = req.body;
+    // 从认证信息获取用户ID
+    const user_id = req.user.id; 
+    const { questionnaire_id, answers } = req.body;
     
     // 验证输入
     if (!Array.isArray(answers) || answers.length === 0) {
