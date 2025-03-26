@@ -168,7 +168,7 @@ app.post('/api/submit-answer', async (req, res) => {
   const transaction = await beginTransaction();
   try {
     // 从认证信息获取用户ID
-    const user_id = req.user.id; 
+    const user_id = req.user.openid; 
     const { questionnaire_id, answers } = req.body;
     
     // 验证输入
