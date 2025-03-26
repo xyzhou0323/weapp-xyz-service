@@ -311,7 +311,7 @@ async function init() {
   await Option.sync({ alter: true });
   await WechatSession.sync({ alter: true }); // 同步微信会话表
   await WechatSession.sync().then(() => {
-    sequelize.query(`
+    testDB.query(`
       CREATE UNIQUE INDEX idx_openid_unique
       ON WechatSessions(openid)
     `);
