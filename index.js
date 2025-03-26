@@ -252,11 +252,26 @@ app.post('/api/login', async (req, res) => {
             expiresAt: new Date(Date.now() + expiresIn * 1000)
         });
 
+        // 同步用户信息到user表
+        const [user] = await questionnaireDB.models.user.findOrCreate({
+            where: { wechat_openid: openid },
+            defaults: {
+                username: null,
+                wechat_openid: openid
+            },
+            transaction: null // 可在此处添加事务
+        });
+
         res.json({
             code: 0,
             data: {
                 session: thirdSession,
-                expiresIn
+                expiresIn,
+                userInfo: {
+                    id: user.id,
+                    username: user.username,
+                    openid: user.wechat_openid
+                }
             }
         });
 

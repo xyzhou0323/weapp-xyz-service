@@ -339,6 +339,30 @@ const getQuestionnaireBaseInfo = async (questionnaireId) => {
   });
 };
 
+// 新增用户模型定义
+const User = questionnaireDB.define('user', {
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    },
+    username: {
+        type: DataTypes.STRING(50),
+        unique: true
+    },
+    wechat_openid: {
+        type: DataTypes.STRING(100),
+        unique: true
+    },
+    created_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
+    }
+}, {
+    tableName: 'user',
+    timestamps: false
+});
+
 // 修改导出
 module.exports = {
   initDB: init,
