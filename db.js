@@ -78,9 +78,15 @@ console.log(Questionnaire.getTableName()); // 应该输出'questionnaire'
 
 // 新增用户答案模型
 const UserAnswer = questionnaireDB.define('user_answer', {
+  id: {
+    type: DataTypes.BIGINT,
+    primaryKey: true,
+    autoIncrement: true
+  },
   user_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false
+    type: DataTypes.STRING(100), // 改为varchar类型
+    allowNull: false,
+    comment: '微信openid'
   },
   questionnaire_id: {
     type: DataTypes.INTEGER,
@@ -100,7 +106,44 @@ const UserAnswer = questionnaireDB.define('user_answer', {
   }
 }, {
   tableName: 'user_answer',
-  timestamps: false
+  timestamps: false,
+  charset: 'utf8mb4',
+  engine: 'InnoDB',
+  indexes: [
+    {
+      name: 'questionnaire_id',
+      fields: ['questionnaire_id']
+    },
+    {
+      name: 'question_id',
+      fields: ['question_id']
+    },
+    {
+      name: 'option_id',
+      fields: ['option_id']
+    },
+    {
+      name: 'idx_user_answer',
+      fields: ['user_id', 'questionnaire_id']
+    }
+  ]
+});
+
+// 更新关联关系
+UserAnswer.belongsTo(questionnaireDB.models.user, {
+  foreignKey: 'user_id',
+  targetKey: 'wechat_openid' // 指向user表的wechat_openid字段
+});
+
+// 保持原有其他关联
+UserAnswer.belongsTo(Questionnaire, {
+  foreignKey: 'questionnaire_id'
+});
+UserAnswer.belongsTo(Question, {
+  foreignKey: 'question_id'
+});
+UserAnswer.belongsTo(Option, {
+  foreignKey: 'option_id'
 });
 
 // 新增Question模型定义
