@@ -13,7 +13,8 @@ const {
   commitTransaction,
   rollbackTransaction,
   saveWechatSession,
-  getWechatSession
+  getWechatSession,
+  findOrCreateUserByOpenid
 } = require("./db");
 
 const axios = require('axios');
@@ -253,14 +254,7 @@ app.post('/api/login', async (req, res) => {
         });
 
         // 同步用户信息到user表
-        const [user] = await questionnaireDB.models.user.findOrCreate({
-            where: { wechat_openid: openid },
-            defaults: {
-                username: null,
-                wechat_openid: openid
-            },
-            transaction: null // 可在此处添加事务
-        });
+        const [user] = await findOrCreateUserByOpenid(openid);
 
         res.json({
             code: 0,

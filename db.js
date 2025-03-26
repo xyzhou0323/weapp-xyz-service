@@ -357,6 +357,18 @@ const User = questionnaireDB.define('user', {
     timestamps: false
 });
 
+// 新增用户操作方法
+const findOrCreateUserByOpenid = async (openid, transaction = null) => {
+  return await questionnaireDB.models.user.findOrCreate({
+    where: { wechat_openid: openid },
+    defaults: {
+      username: null,
+      wechat_openid: openid
+    },
+    transaction
+  });
+};
+
 // 修改导出
 module.exports = {
   initDB: init,
@@ -375,7 +387,8 @@ module.exports = {
   Question,
   Option,
   saveWechatSession,
-  getWechatSession
+  getWechatSession,
+  findOrCreateUserByOpenid
 };
 
 console.log('Question associations:', Question.associations);
